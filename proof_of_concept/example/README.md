@@ -1,0 +1,6 @@
+- Run `make` to generate bindings from the `example.i` file.
+- For Javascript:
+    - Javascript requires node-gyp build tool: `sudo npm install -g node-gyp`
+    - To use the extension you need to 'require' it in the Javascript source file: `require("./build/Release/example")`
+- Currently, the `Makefile` generates bindings for Python, Javascript and Octave
+- For full list of supported languages: [link](http://www.swig.org/compat.html#SupportedLanguages)
