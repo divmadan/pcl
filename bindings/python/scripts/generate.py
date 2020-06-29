@@ -1,4 +1,82 @@
 import json
+import argparse
+import sys
+import os
+
+
+class kind:
+
+    KIND = None
+    NAME = None
+    MEMBERS = None
+    DEPTH = None
+    state_stack = []
+    kind_functions = {
+        "TRANSLATION_UNIT": [],
+        "NAMESPACE": [handle_NAMESPACE_0, handle_NAMESPACE_1],
+        "STRUCT_DECL": [handle_STRUCT_DECL_0, handle_STRUCT_DECL_1],
+        "CXX_BASE_SPECIFIER": [],
+        "CXX_METHOD": [handle_CXX_METHOD],
+        "CONSTRUCTOR": handle_CONSTRUCTOR,
+        "VAR_DECL": handle_VAR_DECL,
+        "PARM_DECL": handle_PARM_DECL,
+        "TYPE_REF": handle_TYPE_REF,
+        "CALL_EXPR": handle_CALL_EXPR,
+    }
+    linelist = []
+
+    def handle_kind(self, item):
+        KIND = item["kind"]
+        NAME = item["name"]
+        MEMBERS = item["members"]
+        DEPTH = item["depth"]
+
+        self.state_stack.append({"kind": KIND, "name": NAME, "depth": DEPTH})
+
+        if self.kind_functions[KIND][0]:
+            self.kind_functions[KIND][0](item)
+
+        for item in MEMBERS:
+            self.handle_kind(item)
+
+        if self.kind_functions[KIND][1]:
+            self.kind_functions[KIND][1](item)
+
+        self.state_stack.pop()
+
+    def handle_NAMESPACE_0(self, item):
+        self.linelist.append(f"namespace {self.NAME}" + "{")
+
+    def handle_NAMESPACE_1(self, item):
+        self.linelist.append("}")
+
+    def handle_STRUCT_DECL_0(self, item):
+        MEMBERS = item["members"]
+        for item in MEMBERS:
+            if item["kind"]=="CXX_BASE_SPECIFIER":
+                CXX_BASE_SPECIFIER = item["name"]
+                self.linelist.append(f'py::class_<{self.NAME, CXX_BASE_SPECIFIER}>(m, "{self.NAME}")')
+                return
+        self.linelist.append(f'py::class_<{self.NAME}>(m, "{self.NAME}")')
+        
+
+    def handle_STRUCT_DECL_1(self, item):
+        self.linelist.append(";")
+
+
+    def handle_CXX_METHOD(item):
+        prev_depth_node = self.get_prev_depth_node()
+        if prev_depth_node:
+            # @TODO
+            METHOD_OF = prev_depth_node["name"]
+            self.linelist.append(f'.def("{self.NAME}", &{METHOD_OF}::CXX_METHOD)')
+        print(CXX_METHOD, "not in struct")
+
+    def get_prev_depth_node(self):
+        for prev_item in reversed(self.state_stack):
+            if prev_item["depth"] == self.DEPTH - 1:
+                return prev_item
+        return
 
 
 def read_json(filename):
@@ -11,10 +89,6 @@ def write_to_cpp(filename, linelist):
         for line in linelist:
             f.writelines(line)
             f.writelines("\n")
-
-
-in_struct = False
-module_linelist = []
 
 
 def handle_final(filename, module_name):
@@ -36,70 +110,85 @@ def handle_final(filename, module_name):
     return linelist
 
 
-def handle_include(item):
+def handle_CALL_EXPR(item):
     pass
 
 
-def handle_alias(item):
+def handle_NAMESPACE_REF(item):
     pass
 
 
-def handle_constructor(item):
-    parameters_type = ""
-    parameters_type = ",".join(params for params in item["parameters_type"])
-    module_linelist.append(f".def(py::init<{parameters_type}>())")
+def handle_TYPE_REF(item):
+    global TYPE_REF_LIST
+    TYPE_REF = item["name"]
+    if TYPE_REF_LIST[-1][0]:
+        TYPE_REF_LIST[-1][1] = TYPE_REF
+    else:
+        TYPE_REF_LIST.append([None, TYPE_REF])
+
+
+def handle_PARM_DECL(item):
+    for sub_item in item["members"]:
+        kind_functions[sub_item["kind"]](sub_item)
+
+
+def handle_CONSTRUCTOR(item):
+    global CONSTRUCTOR
+    global TYPE_REF_LIST
+    CONSTRUCTOR = item["name"]
+    for sub_item in item["members"]:
+        kind_functions[sub_item["kind"]](sub_item)
+    parameters_kind = ",".join(params for params in TYPE_REF_LIST)
+    module_linelist.append(f".def(py::init<{parameters_kind}>())")
+    TYPE_REF_LIST = []
+    CONSTRUCTOR = None
 
 
 def handle_operator(item):
     pass
-    # if in_struct:
-    #     module_linelist.append(f'.def(py::self {item["identifier"]} py::self)')
+    # if STRUCT_DECL:
+    #     module_linelist.append(f'.def(py::self {item["name"]} py::self)')
 
 
-def handle_namespace(item):
-    namespace = item["identifier"]
-    module_linelist.append(f"namespace {namespace}" + "{")
-    for sub_item in item["members"]:
-        type_functions[sub_item["type"]](sub_item)
-    module_linelist.append("}")
-
-
-def handle_struct(item):
-    global in_struct
-    in_struct = True
-    name_decl = item["identifier"]
-    name_impl = item["identifier"]
-    if "parent" in item.keys():
-        name_impl = f'{item["identifier"]}, {item["parent"]}'
-
-    module_linelist.append(f'py::class_<{name_impl}>(m, "{name_decl}")')
-    for sub_item in item["members"]:
-        type_functions[sub_item["type"]](sub_item)
-    module_linelist.append(";")
-    in_struct = False
-
-
-def handle_macro(item):
+def handle_VAR_DECL(item):
     pass
 
 
-type_functions = {
-    "include": handle_include,
-    "namespace": handle_namespace,
-    "alias": handle_alias,
-    "struct": handle_struct,
-    "constructor": handle_constructor,
-    "operator": handle_operator,
-    "macro": handle_macro,
-}
+def get_output_path(source, output_dir):
+    x_list = source.split("json/", 1)[-1]
+    x_list = x_list.split("/")
+
+    filename = x_list[-1].split(".")[0]
+    relative_dir = "/".join(x for x in x_list[:-1])
+    dir = os.path.join(output_dir, relative_dir)
+
+    # ensure the new directory exists
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
+    return f"{dir}/{filename}.cpp"
+
+
+def parse_arguments(args):
+    parser = argparse.ArgumentParser(description="JSON to pybind11 generation")
+    parser.add_argument("files", nargs="+", help="JSON input")
+    return parser.parse_args(args)
 
 
 def main():
-    header_info = read_json("common/point_types.json")
-    for item in header_info:
-        type_functions[item["type"]](item)
-    lines_to_write = handle_final(filename="pcl/point_types.h", module_name="pcl")
-    write_to_cpp(filename="common/py_point_types.cpp", linelist=lines_to_write)
+    args = parse_arguments(sys.argv[1:])
+
+    for source in args.files:
+        header_info = read_json(source)
+
+        for item in header_info:
+            kind_functions[item["kind"]](item)
+
+        lines_to_write = handle_final(filename="pcl/point_types.h", module_name="pcl")
+        output_filepath = get_output_path(
+            os.path.realpath(source), output_dir=f"pybind11/{os.path.dirname(__file__)}"
+        )
+        write_to_cpp(filename=output_filepath, linelist=lines_to_write)
 
 
 if __name__ == "__main__":
