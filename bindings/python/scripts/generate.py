@@ -4,80 +4,114 @@ import sys
 import os
 
 
-class kind:
+class bind:
+    def __init__(self, root):
+        self._state_stack = []
+        self.linelist = []
+        self._skipped = []
+        self.kind_functions = {
+            "TRANSLATION_UNIT": [self.skip],
+            "NAMESPACE": [self.handle_namespace_0, self.handle_namespace_1],
+            "NAMESPACE_REF": [self.skip],
+            "STRUCT_DECL": [self.handle_struct_decl_0, self.handle_struct_decl_1],
+            "CXX_BASE_SPECIFIER": [self.skip],
+            "CXX_METHOD": [self.handle_cxx_method],
+            "CONSTRUCTOR": [self.handle_constructor],
+            "VAR_DECL": [self.handle_var_decl],
+            "PARM_DECL": [self.handle_parm_decl],
+            "TYPE_REF": [self.handle_type_ref],
+            "CALL_EXPR": [self.handle_call_expr],
+        }
 
-    KIND = None
-    NAME = None
-    MEMBERS = None
-    DEPTH = None
-    state_stack = []
-    kind_functions = {
-        "TRANSLATION_UNIT": [],
-        "NAMESPACE": [handle_NAMESPACE_0, handle_NAMESPACE_1],
-        "STRUCT_DECL": [handle_STRUCT_DECL_0, handle_STRUCT_DECL_1],
-        "CXX_BASE_SPECIFIER": [],
-        "CXX_METHOD": [handle_CXX_METHOD],
-        "CONSTRUCTOR": handle_CONSTRUCTOR,
-        "VAR_DECL": handle_VAR_DECL,
-        "PARM_DECL": handle_PARM_DECL,
-        "TYPE_REF": handle_TYPE_REF,
-        "CALL_EXPR": handle_CALL_EXPR,
-    }
-    linelist = []
+        self.handle_node(root)
 
-    def handle_kind(self, item):
-        KIND = item["kind"]
-        NAME = item["name"]
-        MEMBERS = item["members"]
-        DEPTH = item["depth"]
+    def get_prev_depth_node(self):
+        for prev_item in reversed(self._state_stack):
+            if prev_item["depth"] == self.depth - 1:
+                return prev_item
+        return
 
-        self.state_stack.append({"kind": KIND, "name": NAME, "depth": DEPTH})
+    def skip(self):
+        self._skipped.append({"line": self.item["line"], "column":self.item["line"], "kind": self.kind, "name": self.name})
 
-        if self.kind_functions[KIND][0]:
-            self.kind_functions[KIND][0](item)
+    def handle_node(self, item):
+        self.item = item
+        self.kind = self.item["kind"]
+        self.name = self.item["name"]
+        self.members = self.item["members"]
+        self.depth = self.item["depth"]
 
-        for item in MEMBERS:
-            self.handle_kind(item)
+        self._state_stack.append({"kind": self.kind, "name": self.name, "depth": self.depth})
 
-        if self.kind_functions[KIND][1]:
-            self.kind_functions[KIND][1](item)
+        self.kind_functions[self.kind][0]()
 
-        self.state_stack.pop()
+        for sub_item in self.members:
+            self.handle_node(sub_item)
 
-    def handle_NAMESPACE_0(self, item):
-        self.linelist.append(f"namespace {self.NAME}" + "{")
+        if len(self.kind_functions[self.kind]) > 1:
+            self.kind_functions[self.kind][1]()
 
-    def handle_NAMESPACE_1(self, item):
+        self._state_stack.pop()
+
+    def handle_namespace_0(self):
+        self.linelist.append(f"namespace {self.name}" + "{")
+
+    def handle_namespace_1(self):
         self.linelist.append("}")
 
-    def handle_STRUCT_DECL_0(self, item):
-        MEMBERS = item["members"]
-        for item in MEMBERS:
-            if item["kind"]=="CXX_BASE_SPECIFIER":
-                CXX_BASE_SPECIFIER = item["name"]
-                self.linelist.append(f'py::class_<{self.NAME, CXX_BASE_SPECIFIER}>(m, "{self.NAME}")')
-                return
-        self.linelist.append(f'py::class_<{self.NAME}>(m, "{self.NAME}")')
-        
+    def handle_struct_decl_0(self):
+        cxx_base_specifier_list = [
+            sub_item["name"]
+            for sub_item in self.members
+            if sub_item["kind"] == "CXX_BASE_SPECIFIER"
+        ]
+        if cxx_base_specifier_list:
+            cxx_base_specifier_list = ",".join(cxx_base_specifier_list)
+            self.linelist.append(
+                f'py::class_<{self.name, cxx_base_specifier_list}>(m, "{self.name}")'
+            )
+        else:
+            self.linelist.append(f'py::class_<{self.name}>(m, "{self.name}")')
 
-    def handle_STRUCT_DECL_1(self, item):
+    def handle_struct_decl_1(self):
         self.linelist.append(";")
 
-
-    def handle_CXX_METHOD(item):
+    def handle_cxx_method(self):
         prev_depth_node = self.get_prev_depth_node()
         if prev_depth_node:
             # @TODO
             METHOD_OF = prev_depth_node["name"]
-            self.linelist.append(f'.def("{self.NAME}", &{METHOD_OF}::CXX_METHOD)')
-        print(CXX_METHOD, "not in struct")
+            self.linelist.append(f'.def("{self.name}", &{METHOD_OF}::cxx_method)')
 
-    def get_prev_depth_node(self):
-        for prev_item in reversed(self.state_stack):
-            if prev_item["depth"] == self.DEPTH - 1:
-                return prev_item
-        return
+    def handle_constructor(self):
+        # global CONSTRUCTOR
+        # global TYPE_REF_LIST
+        # CONSTRUCTOR = item["name"]
+        # for sub_item in item["members"]:
+        #     kind_functions[sub_item["kind"]](sub_item)
+        # parameters_kind = ",".join(params for params in TYPE_REF_LIST)
+        # module_linelist.append(f".def(py::init<{parameters_kind}>())")
+        # TYPE_REF_LIST = []
+        # CONSTRUCTOR = None
+        pass
 
+    def handle_var_decl(item):
+        pass
+
+    def handle_parm_decl(item):
+        pass
+
+    def handle_call_expr(item):
+        pass
+
+    def handle_type_ref(item):
+        # global TYPE_REF_LIST
+        # TYPE_REF = item["name"]
+        # if TYPE_REF_LIST[-1][0]:
+        #     TYPE_REF_LIST[-1][1] = TYPE_REF
+        # else:
+        #     TYPE_REF_LIST.append([None, TYPE_REF])
+        pass
 
 def read_json(filename):
     with open(filename, "r") as f:
@@ -110,50 +144,6 @@ def handle_final(filename, module_name):
     return linelist
 
 
-def handle_CALL_EXPR(item):
-    pass
-
-
-def handle_NAMESPACE_REF(item):
-    pass
-
-
-def handle_TYPE_REF(item):
-    global TYPE_REF_LIST
-    TYPE_REF = item["name"]
-    if TYPE_REF_LIST[-1][0]:
-        TYPE_REF_LIST[-1][1] = TYPE_REF
-    else:
-        TYPE_REF_LIST.append([None, TYPE_REF])
-
-
-def handle_PARM_DECL(item):
-    for sub_item in item["members"]:
-        kind_functions[sub_item["kind"]](sub_item)
-
-
-def handle_CONSTRUCTOR(item):
-    global CONSTRUCTOR
-    global TYPE_REF_LIST
-    CONSTRUCTOR = item["name"]
-    for sub_item in item["members"]:
-        kind_functions[sub_item["kind"]](sub_item)
-    parameters_kind = ",".join(params for params in TYPE_REF_LIST)
-    module_linelist.append(f".def(py::init<{parameters_kind}>())")
-    TYPE_REF_LIST = []
-    CONSTRUCTOR = None
-
-
-def handle_operator(item):
-    pass
-    # if STRUCT_DECL:
-    #     module_linelist.append(f'.def(py::self {item["name"]} py::self)')
-
-
-def handle_VAR_DECL(item):
-    pass
-
-
 def get_output_path(source, output_dir):
     x_list = source.split("json/", 1)[-1]
     x_list = x_list.split("/")
@@ -180,9 +170,11 @@ def main():
 
     for source in args.files:
         header_info = read_json(source)
-
-        for item in header_info:
-            kind_functions[item["kind"]](item)
+        if header_info:
+            bind_object = bind(header_info[0])
+        else:
+            raise Exception("Empty json")
+        
 
         lines_to_write = handle_final(filename="pcl/point_types.h", module_name="pcl")
         output_filepath = get_output_path(
