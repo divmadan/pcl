@@ -16,11 +16,9 @@ class bind:
             "STRUCT_DECL": [self.handle_struct_decl_0, self.handle_struct_decl_1],
             "CXX_BASE_SPECIFIER": [self.skip],
             "CXX_METHOD": [self.handle_cxx_method],
+            "VAR_DECL": [self.skip],
+            "TYPE_REF": [self.skip],
             "CONSTRUCTOR": [self.handle_constructor],
-            "VAR_DECL": [self.handle_var_decl],
-            "PARM_DECL": [self.handle_parm_decl],
-            "TYPE_REF": [self.handle_type_ref],
-            "CALL_EXPR": [self.handle_call_expr],
         }
 
         self.handle_node(root)
@@ -32,7 +30,7 @@ class bind:
         return
 
     def skip(self):
-        self._skipped.append({"line": self.item["line"], "column":self.item["line"], "kind": self.kind, "name": self.name})
+        self._skipped.append({"line": self.item["line"], "column": self.item["line"], "kind": self.kind, "name": self.name})
 
     def handle_node(self, item):
         self.item = item
@@ -60,16 +58,10 @@ class bind:
         self.linelist.append("}")
 
     def handle_struct_decl_0(self):
-        cxx_base_specifier_list = [
-            sub_item["name"]
-            for sub_item in self.members
-            if sub_item["kind"] == "CXX_BASE_SPECIFIER"
-        ]
+        cxx_base_specifier_list = [sub_item["name"] for sub_item in self.members if sub_item["kind"] == "CXX_BASE_SPECIFIER"]
         if cxx_base_specifier_list:
             cxx_base_specifier_list = ",".join(cxx_base_specifier_list)
-            self.linelist.append(
-                f'py::class_<{self.name, cxx_base_specifier_list}>(m, "{self.name}")'
-            )
+            self.linelist.append(f'py::class_<{self.name, cxx_base_specifier_list}>(m, "{self.name}")')
         else:
             self.linelist.append(f'py::class_<{self.name}>(m, "{self.name}")')
 
@@ -79,11 +71,14 @@ class bind:
     def handle_cxx_method(self):
         prev_depth_node = self.get_prev_depth_node()
         if prev_depth_node:
-            # @TODO
-            METHOD_OF = prev_depth_node["name"]
-            self.linelist.append(f'.def("{self.name}", &{METHOD_OF}::cxx_method)')
+            method_of = prev_depth_node["name"]
+            self.linelist.append(f'.def("{self.name}", &{method_of}::{self.name})')
+        else:
+            self.linelist.append(f'.def("{self.name}", &{self.name})')
 
     def handle_constructor(self):
+        type_ref_list = [sub_item["name"] for sub_item in self.members if sub_item["kind"] == "CXX_BASE_SPECIFIER"]
+
         # global CONSTRUCTOR
         # global TYPE_REF_LIST
         # CONSTRUCTOR = item["name"]
@@ -113,6 +108,7 @@ class bind:
         #     TYPE_REF_LIST.append([None, TYPE_REF])
         pass
 
+
 def read_json(filename):
     with open(filename, "r") as f:
         return json.load(f)
@@ -134,9 +130,7 @@ def handle_final(filename, module_name):
         if module_linelist[i].startswith("namespace"):
             continue
         else:
-            module_linelist[i] = "".join(
-                (f"PYBIND11_MODULE({module_name}, m)", "{", module_linelist[i])
-            )
+            module_linelist[i] = "".join((f"PYBIND11_MODULE({module_name}, m)", "{", module_linelist[i]))
             break
     for line in module_linelist:
         linelist.append(line)
@@ -174,12 +168,9 @@ def main():
             bind_object = bind(header_info[0])
         else:
             raise Exception("Empty json")
-        
 
         lines_to_write = handle_final(filename="pcl/point_types.h", module_name="pcl")
-        output_filepath = get_output_path(
-            os.path.realpath(source), output_dir=f"pybind11/{os.path.dirname(__file__)}"
-        )
+        output_filepath = get_output_path(os.path.realpath(source), output_dir=f"pybind11/{os.path.dirname(__file__)}")
         write_to_cpp(filename=output_filepath, linelist=lines_to_write)
 
 
