@@ -19,6 +19,7 @@ class bind:
             "VAR_DECL": [self.skip],
             "TYPE_REF": [self.skip],
             "CONSTRUCTOR": [self.handle_constructor],
+            "PARM_DECL": [self.skip],
         }
 
         self.handle_node(root)
@@ -77,24 +78,23 @@ class bind:
             self.linelist.append(f'.def("{self.name}", &{self.name})')
 
     def handle_constructor(self):
-        type_ref_list = [sub_item["name"] for sub_item in self.members if sub_item["kind"] == "CXX_BASE_SPECIFIER"]
-
-        # global CONSTRUCTOR
-        # global TYPE_REF_LIST
-        # CONSTRUCTOR = item["name"]
-        # for sub_item in item["members"]:
-        #     kind_functions[sub_item["kind"]](sub_item)
-        # parameters_kind = ",".join(params for params in TYPE_REF_LIST)
-        # module_linelist.append(f".def(py::init<{parameters_kind}>())")
-        # TYPE_REF_LIST = []
-        # CONSTRUCTOR = None
-        pass
-
-    def handle_var_decl(item):
-        pass
-
-    def handle_parm_decl(item):
-        pass
+        argument_type_list = []
+        parameter_decl_list = []
+        for sub_item in self.members:
+            if sub_item["kind"] == "PARM_DECL":
+                parameter_decl_list.append(sub_item["name"])
+                if sub_item["element_type"] == "LValueReference":
+                    for sub_sub_item in sub_item["members"]:
+                        if sub_sub_item["kind"] == "TYPE_REF":
+                            argument_type_list.append(f'&{sub_sub_item["name"]}')
+                else:
+                    if sub_item["element_type"] in ["Float"]:
+                        argument_type_list.append(f'&{sub_item["element_type"].lower()}')
+                    else:
+                        argument_type_list.append(f'&{sub_item["element_type"]}')
+        parameter_decl_list = ",".join([decl + "_a" for decl in parameter_decl_list])
+        argument_type_list = ",".join(argument_type_list)
+        self.linelist.append(f".def(py::init<{argument_type_list}>(), {parameter_decl_list})")
 
     def handle_call_expr(item):
         pass
