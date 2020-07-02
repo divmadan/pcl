@@ -20,6 +20,10 @@ class bind:
             "TYPE_REF": [self.skip],
             "CONSTRUCTOR": [self.handle_constructor],
             "PARM_DECL": [self.skip],
+            "CALL_EXPR": [self.skip],
+            "UNEXPOSED_EXPR": [self.skip],
+            "MEMBER_REF_EXPR": [self.skip],
+            "DECL_REF_EXPR": [self.skip]
         }
 
         self.handle_node(root)
@@ -95,18 +99,6 @@ class bind:
         parameter_decl_list = ",".join([decl + "_a" for decl in parameter_decl_list])
         argument_type_list = ",".join(argument_type_list)
         self.linelist.append(f".def(py::init<{argument_type_list}>(), {parameter_decl_list})")
-
-    def handle_call_expr(item):
-        pass
-
-    def handle_type_ref(item):
-        # global TYPE_REF_LIST
-        # TYPE_REF = item["name"]
-        # if TYPE_REF_LIST[-1][0]:
-        #     TYPE_REF_LIST[-1][1] = TYPE_REF
-        # else:
-        #     TYPE_REF_LIST.append([None, TYPE_REF])
-        pass
 
 
 def read_json(filename):
