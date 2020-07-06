@@ -23,7 +23,9 @@ class bind:
             "CALL_EXPR": [self.skip],
             "UNEXPOSED_EXPR": [self.skip],
             "MEMBER_REF_EXPR": [self.skip],
-            "DECL_REF_EXPR": [self.skip]
+            "DECL_REF_EXPR": [self.skip],
+            "FIELD_DECL": [self.handle_field_decl],
+            "MEMBER_REF": [self.skip],
         }
 
         self.handle_node(root)
@@ -99,6 +101,14 @@ class bind:
         parameter_decl_list = ",".join([decl + "_a" for decl in parameter_decl_list])
         argument_type_list = ",".join(argument_type_list)
         self.linelist.append(f".def(py::init<{argument_type_list}>(), {parameter_decl_list})")
+
+    def handle_field_decl(self):
+        prev_depth_node = self.get_prev_depth_node()
+        if prev_depth_node:
+            field_of = prev_depth_node["name"]
+            self.linelist.append(f'def_readwrite("{self.name}", &{field_of}::{self.name})')
+        else:
+            self.linelist.append(f'.def("{self.name}", &{self.name})')
 
 
 def read_json(filename):
