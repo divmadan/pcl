@@ -15,13 +15,10 @@ def test_node_in_this_file_true():
     recursive_call(cursor=tu.cursor)
 
 
-def test_node_in_this_file_false_none():
+def test_node_in_this_file_false():
     def recursive_call(cursor):
         for child in cursor.get_children():
-            if child.location.file:
-                assert parse.node_in_this_file(child, tu.spelling) == False
-            else:
-                assert parse.node_in_this_file(child, tu.spelling) == None
+            assert parse.node_in_this_file(child, tu.spelling) == False
             recursive_call(cursor=child)
 
     unsaved_files = (("file.cpp", "#include<algorithm>"),)
