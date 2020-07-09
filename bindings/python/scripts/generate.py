@@ -26,7 +26,7 @@ class bind:
             "DECL_REF_EXPR": [self.skip],
             "FIELD_DECL": [self.handle_field_decl],
             "MEMBER_REF": [self.skip],
-            "CLASS_TEMPLATE": [self.handle_class_template],
+            "CLASS_TEMPLATE": [self.handle_class_template_0, self.handle_class_template_1],
             "TEMPLATE_NON_TYPE_PARAMETER": [self.skip],
             "FUNCTION_TEMPLATE": [self.skip],
         }
@@ -109,11 +109,11 @@ class bind:
         prev_depth_node = self.get_prev_depth_node()
         if prev_depth_node:
             field_of = prev_depth_node["name"]
-            self.linelist.append(f'def_readwrite("{self.name}", &{field_of}::{self.name})')
+            self.linelist.append(f'.def_readwrite("{self.name}", &{field_of}::{self.name})')
         else:
             self.linelist.append(f'.def("{self.name}", &{self.name})')
 
-    def handle_class_template(self):
+    def handle_class_template_0(self):
         flag = False
         for sub_item in self.members:
             if sub_item["kind"] == "TEMPLATE_NON_TYPE_PARAMETER":
@@ -121,12 +121,22 @@ class bind:
                 flag = True
         if not flag:
             self.linelist.append(f"template<>")
+        cxx_base_specifier_list = [sub_item["name"] for sub_item in self.members if sub_item["kind"] == "CXX_BASE_SPECIFIER"]
+        if cxx_base_specifier_list:
+            cxx_base_specifier_list = ",".join(cxx_base_specifier_list)
+            self.linelist.append(f'py::class_<{self.name, cxx_base_specifier_list}>(m, "{self.name}")')
+        else:
+            self.linelist.append(f'py::class_<{self.name}>(m, "{self.name}")')
+
+    def handle_class_template_1(self):
+        self.linelist.append(";")
 
     def handle_final(self, filename, module_name):
         final = []
         final.append(f"#include <{filename}>")
         final.append("#include <pybind11/pybind11.h>")
         final.append("namespace py = pybind11;")
+        final.append("using namespace py::literals;")
         for i in range(len(self.linelist)):
             if self.linelist[i].startswith("namespace"):
                 continue
