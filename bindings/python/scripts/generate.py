@@ -26,6 +26,9 @@ class bind:
             "DECL_REF_EXPR": [self.skip],
             "FIELD_DECL": [self.handle_field_decl],
             "MEMBER_REF": [self.skip],
+            "CLASS_TEMPLATE": [self.handle_class_template],
+            "TEMPLATE_NON_TYPE_PARAMETER": [self.skip],
+            "FUNCTION_TEMPLATE": [self.skip],
         }
 
         self.handle_node(root)
@@ -110,6 +113,31 @@ class bind:
         else:
             self.linelist.append(f'.def("{self.name}", &{self.name})')
 
+    def handle_class_template(self):
+        flag = False
+        for sub_item in self.members:
+            if sub_item["kind"] == "TEMPLATE_NON_TYPE_PARAMETER":
+                self.linelist.append(f'template< {sub_item["element_type"].lower()} {sub_item["name"]} >')
+                flag = True
+        if not flag:
+            self.linelist.append(f"template<>")
+
+    def handle_final(self, filename, module_name):
+        final = []
+        final.append(f"#include <{filename}>")
+        final.append("#include <pybind11/pybind11.h>")
+        final.append("namespace py = pybind11;")
+        for i in range(len(self.linelist)):
+            if self.linelist[i].startswith("namespace"):
+                continue
+            else:
+                self.linelist[i] = "".join((f"PYBIND11_MODULE({module_name}, m)", "{", self.linelist[i]))
+                break
+        for line in self.linelist:
+            final.append(line)
+        final.append("}")
+        return final
+
 
 def read_json(filename):
     with open(filename, "r") as f:
@@ -121,23 +149,6 @@ def write_to_cpp(filename, linelist):
         for line in linelist:
             f.writelines(line)
             f.writelines("\n")
-
-
-def handle_final(filename, module_name):
-    linelist = []
-    linelist.append(f"#include <{filename}>")
-    linelist.append("#include <pybind11/pybind11.h>")
-    linelist.append("namespace py = pybind11;")
-    for i in range(len(module_linelist)):
-        if module_linelist[i].startswith("namespace"):
-            continue
-        else:
-            module_linelist[i] = "".join((f"PYBIND11_MODULE({module_name}, m)", "{", module_linelist[i]))
-            break
-    for line in module_linelist:
-        linelist.append(line)
-    linelist.append("}")
-    return linelist
 
 
 def get_output_path(source, output_dir):
@@ -168,12 +179,12 @@ def main():
         header_info = read_json(source)
         if header_info:
             bind_object = bind(header_info[0])
+            lines_to_write = bind_object.handle_final(filename="pcl/point_types.h", module_name="pcl")
+            output_filepath = get_output_path(os.path.realpath(source), output_dir=f"pybind11/{os.path.dirname(__file__)}")
+            write_to_cpp(filename=output_filepath, linelist=lines_to_write)
+
         else:
             raise Exception("Empty json")
-
-        lines_to_write = handle_final(filename="pcl/point_types.h", module_name="pcl")
-        output_filepath = get_output_path(os.path.realpath(source), output_dir=f"pybind11/{os.path.dirname(__file__)}")
-        write_to_cpp(filename=output_filepath, linelist=lines_to_write)
 
 
 if __name__ == "__main__":
