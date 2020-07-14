@@ -73,5 +73,25 @@ def test_struct(tmp_path):
         ),
     )
 
-    assert parsed_info["members"][0]["kind"] == "STRUCT_DECL"
+    struct_decl = parsed_info["members"][0]
+
+    assert struct_decl["kind"] == "STRUCT_DECL"
+
+
+def test_struct_base(tmp_path):
+    source_path = tmp_path / "file.hpp"
+    source_path.write_text("struct _AStruct{}; struct AStruct: public _AStruct{};")
+
+    parsed_info = parse.parse_file(
+        source=str(source_path),
+        compilation_database_path=create_compilation_database(
+            tmp_path=tmp_path, filepath=source_path
+        ),
+    )
+
+    child_struct_decl = parsed_info["members"][1]
+    cxx_base_specifier = child_struct_decl["members"][0]
+
+    assert cxx_base_specifier["kind"] == "CXX_BASE_SPECIFIER"
+    assert cxx_base_specifier["access_specifier"] == "PUBLIC"
 
