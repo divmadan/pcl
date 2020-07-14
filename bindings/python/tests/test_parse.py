@@ -47,7 +47,7 @@ def create_compilation_database(tmp_path, filepath):
     return tmp_path
 
 
-def test_type(tmp_path):
+def test_types(tmp_path):
     source_path = tmp_path / "file.hpp"
     source_path.write_text("struct AStruct{};")
 
@@ -62,7 +62,7 @@ def test_type(tmp_path):
     assert type(parsed_info["members"]) is list
 
 
-def test_struct(tmp_path):
+def test_struct_decl(tmp_path):
     source_path = tmp_path / "file.hpp"
     source_path.write_text("struct AStruct{};")
 
@@ -78,7 +78,7 @@ def test_struct(tmp_path):
     assert struct_decl["kind"] == "STRUCT_DECL"
 
 
-def test_struct_base(tmp_path):
+def test_cxx_base_specifier(tmp_path):
     source_path = tmp_path / "file.hpp"
     source_path.write_text("struct _AStruct{}; struct AStruct: public _AStruct{};")
 
