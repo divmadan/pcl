@@ -58,8 +58,8 @@ def test_type(tmp_path):
         ),
     )
 
-    assert type(parsed_info) == type(dict())
-    assert type(parsed_info["members"]) == type(list())
+    assert type(parsed_info) is dict
+    assert type(parsed_info["members"]) is list
 
 
 def test_struct(tmp_path):
