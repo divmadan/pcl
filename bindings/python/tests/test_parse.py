@@ -6,32 +6,6 @@ import os
 
 import clang.cindex as clang
 
-# def test_node_in_this_file_true():
-#     def recursive_call(cursor):
-#         for child in cursor.get_children():
-#             assert parse.node_in_this_file(child, tu.spelling) == True
-#             recursive_call(cursor=child)
-
-#     unsaved_files = (("file.cpp", "void function() {}"),)
-#     tu = clang.TranslationUnit.from_source(filename="file.cpp", unsaved_files=unsaved_files)
-#     recursive_call(cursor=tu.cursor)
-
-
-# def test_node_in_this_file_false():
-#     def recursive_call(cursor):
-#         for child in cursor.get_children():
-#             assert parse.node_in_this_file(child, tu.spelling) == False
-#             recursive_call(cursor=child)
-
-#     unsaved_files = (("file.cpp", "#include<algorithm>"),)
-#     tu = clang.TranslationUnit.from_source(filename="file.cpp", unsaved_files=unsaved_files)
-#     recursive_call(cursor=tu.cursor)
-
-
-# def test_create_file(tmpdir):
-#     p = tmpdir.mkdir("input").join("hello.txt")
-#     p.write("content")
-
 
 def create_compilation_database(tmp_path, filepath):
     input = tmp_path / "compile_commands.json"
