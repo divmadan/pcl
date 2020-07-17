@@ -21,9 +21,9 @@ def create_compilation_database(tmp_path, filepath):
     return tmp_path
 
 
-def test_types(tmp_path):
+def get_parsed_info(tmp_path, file_contents):
     source_path = tmp_path / "file.hpp"
-    source_path.write_text("struct AStruct{};")
+    source_path.write_bytes(str(file_contents).encode())
 
     parsed_info = parse.parse_file(
         source=str(source_path),
@@ -32,6 +32,7 @@ def test_types(tmp_path):
         ),
     )
 
+    return parsed_info
     assert type(parsed_info) is dict
     assert type(parsed_info["members"]) is list
 
