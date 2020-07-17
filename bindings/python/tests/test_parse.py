@@ -33,20 +33,44 @@ def get_parsed_info(tmp_path, file_contents):
     )
 
     return parsed_info
+
+
+def test_types(tmp_path):
+    file_contents = ""
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
     assert type(parsed_info) is dict
     assert type(parsed_info["members"]) is list
 
 
-def test_struct_decl(tmp_path):
-    source_path = tmp_path / "file.hpp"
-    source_path.write_text("struct AStruct{};")
+def test_translation_unit(tmp_path):
+    file_contents = ""
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
 
-    parsed_info = parse.parse_file(
-        source=str(source_path),
-        compilation_database_path=create_compilation_database(
-            tmp_path=tmp_path, filepath=source_path
-        ),
-    )
+    assert parsed_info["kind"] == "TRANSLATION_UNIT"
+
+
+def test_namespace(tmp_path):
+    file_contents = "namespace Anamespace {  }// namespace Anamespace"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
+    namespace = parsed_info["members"][0]
+
+    assert namespace["kind"] == "NAMESPACE"
+
+
+def test_namespace_ref(tmp_path):
+    file_contents = "#include<ostream> \n std::ostream Aostream;"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
+    namespace_ref = parsed_info["members"][0]["members"][0]
+
+    assert namespace_ref["kind"] == "NAMESPACE_REF"
+
+
+def test_struct_decl(tmp_path):
+    file_contents = "struct AStruct{};"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
 
     struct_decl = parsed_info["members"][0]
 
@@ -54,15 +78,8 @@ def test_struct_decl(tmp_path):
 
 
 def test_cxx_base_specifier(tmp_path):
-    source_path = tmp_path / "file.hpp"
-    source_path.write_text("struct _AStruct{}; struct AStruct: public _AStruct{};")
-
-    parsed_info = parse.parse_file(
-        source=str(source_path),
-        compilation_database_path=create_compilation_database(
-            tmp_path=tmp_path, filepath=source_path
-        ),
-    )
+    file_contents = "struct _AStruct{}; struct AStruct: public _AStruct{};"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
 
     child_struct_decl = parsed_info["members"][1]
     cxx_base_specifier = child_struct_decl["members"][0]
@@ -70,3 +87,5 @@ def test_cxx_base_specifier(tmp_path):
     assert cxx_base_specifier["kind"] == "CXX_BASE_SPECIFIER"
     assert cxx_base_specifier["access_specifier"] == "PUBLIC"
 
+
+# def test_
