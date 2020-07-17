@@ -88,4 +88,32 @@ def test_cxx_base_specifier(tmp_path):
     assert cxx_base_specifier["access_specifier"] == "PUBLIC"
 
 
-# def test_
+def test_cxx_method(tmp_path):
+    file_contents = "struct AStruct{void Afunction();}"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
+    cxx_method = parsed_info["members"][0]["members"][0]
+
+    assert cxx_method["kind"] == "CXX_METHOD"
+    assert cxx_method["result_type"] == "void"
+
+
+def test_var_decl(tmp_path):
+    file_contents = "int Aint=1;"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
+    var_decl = parsed_info["members"][0]
+
+    assert var_decl["kind"] == "VAR_DECL"
+
+
+def test_type_ref(tmp_path):
+    file_contents = "struct Astruct{int Aint;} \n void Afunction(Astruct& Aint);"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
+    function_decl = parsed_info["members"][1]
+    l_value_ref = function_decl["members"][0]
+    type_ref = l_value_ref["members"][0]
+
+    assert type_ref["kind"] == "TYPE_REF"
+
