@@ -78,7 +78,7 @@ def test_struct_decl(tmp_path):
 
 
 def test_cxx_base_specifier(tmp_path):
-    file_contents = "struct _AStruct{}; struct AStruct: public _AStruct{};"
+    file_contents = "struct AStruct{}; struct BStruct: public AStruct{};"
     parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
 
     child_struct_decl = parsed_info["members"][1]
@@ -92,7 +92,8 @@ def test_cxx_method(tmp_path):
     file_contents = "struct AStruct{void Afunction();}"
     parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
 
-    cxx_method = parsed_info["members"][0]["members"][0]
+    struct_decl = parsed_info["members"][0]
+    cxx_method = struct_decl["members"][0]
 
     assert cxx_method["kind"] == "CXX_METHOD"
     assert cxx_method["result_type"] == "void"
@@ -105,6 +106,7 @@ def test_var_decl(tmp_path):
     var_decl = parsed_info["members"][0]
 
     assert var_decl["kind"] == "VAR_DECL"
+    assert var_decl["element_type"] == "Int"
 
 
 def test_type_ref(tmp_path):
@@ -117,3 +119,119 @@ def test_type_ref(tmp_path):
 
     assert type_ref["kind"] == "TYPE_REF"
 
+
+def test_constructor(tmp_path):
+    file_contents = "struct Astruct{Astruct(){}};"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
+    struct_decl = parsed_info["members"][0]
+    constructor = struct_decl["members"][0]
+
+    assert constructor["kind"] == "CONSTRUCTOR"
+    assert constructor["access_specifier"] == "PUBLIC"
+
+
+def test_parm_decl(tmp_path):
+    file_contents = "struct Astruct{ Astruct(int Aint) {} };"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
+    struct_decl = parsed_info["members"][0]
+    constructor = struct_decl["members"][0]
+    parm_decl = constructor["members"][0]
+
+    assert parm_decl["kind"] == "PARM_DECL"
+    assert parm_decl["element_type"] == "Int"
+
+
+def test_call_expr(tmp_path):
+    file_contents = "struct Astruct{ Astruct (): Astruct() {} };"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
+    struct_decl = parsed_info["members"][0]
+    constructor = struct_decl["members"][0]
+    call_expr = constructor["members"][1]
+
+    assert call_expr["kind"] == "CALL_EXPR"
+
+
+def test_unexposed_expr(tmp_path):
+    file_contents = "struct Astruct{ int Aint; \n\
+        Astruct (int Bint): Aint(Bint) {} };"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
+    struct_decl = parsed_info["members"][0]
+    constructor = struct_decl["members"][1]
+    unexposed_expr = constructor["members"][2]
+
+    assert unexposed_expr["kind"] == "UNEXPOSED_EXPR"
+
+
+# @TODO: Not sure how to reproduce. Maybe later.
+# def test_member_ref_expr(tmp_path):
+
+
+def test_decl_ref_expr(tmp_path):
+    file_contents = "struct Astruct{ int Aint; \n\
+        Astruct (int Bint): Aint(Bint) {} };"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
+    struct_decl = parsed_info["members"][0]
+    constructor = struct_decl["members"][1]
+    unexposed_expr = constructor["members"][2]
+    decl_ref_expr = unexposed_expr["members"][0]
+
+    assert decl_ref_expr["kind"] == "DECL_REF_EXPR"
+
+
+def test_field_decl(tmp_path):
+    file_contents = "struct Astruct{ int Aint; };"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
+    struct_decl = parsed_info["members"][0]
+    field_decl = struct_decl["members"][0]
+
+    assert field_decl["kind"] == "FIELD_DECL"
+    assert field_decl["element_type"] == "Int"
+
+
+def test_member_ref(tmp_path):
+    file_contents = "struct Astruct{ int Aint; \n\
+        Astruct (int Bint): Aint(Bint) {} };"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
+    struct_decl = parsed_info["members"][0]
+    constructor = struct_decl["members"][1]
+    member_ref = constructor["members"][1]
+
+    assert member_ref["kind"] == "MEMBER_REF"
+    assert member_ref["element_type"] == "Int"
+
+
+def test_class_template(tmp_path):
+    file_contents = "template<typename N> struct Astruct {};"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
+    class_template = parsed_info["members"][0]
+
+    assert class_template["kind"] == "CLASS_TEMPLATE"
+
+
+def test_template_non_type_parameter(tmp_path):
+    file_contents = "template<int N> struct Astruct {};"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
+    class_template = parsed_info["members"][0]
+    template_non_type_parameter = class_template["members"][0]
+
+    assert template_non_type_parameter["kind"] == "TEMPLATE_NON_TYPE_PARAMETER"
+    assert template_non_type_parameter["element_type"] == "Int"
+
+
+def test_function_template(tmp_path):
+    file_contents = "template<int N> void Afunction() {}"
+    parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
+
+    function_template = parsed_info["members"][0]
+
+    assert function_template["kind"] == "FUNCTION_TEMPLATE"
+    assert function_template["result_type"] == "void"
