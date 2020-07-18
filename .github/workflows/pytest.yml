@@ -40,5 +40,6 @@ jobs:
     # Test
     - name: Changing directory and running tests
       run: |
+        ls
         cd bindings/python
         pytest
