@@ -51,7 +51,7 @@ def test_translation_unit(tmp_path):
 
 
 def test_namespace(tmp_path):
-    file_contents = "namespace Anamespace {  }// namespace Anamespace"
+    file_contents = "namespace Anamespace {}"
     parsed_info = get_parsed_info(tmp_path=tmp_path, file_contents=file_contents)
 
     namespace = parsed_info["members"][0]
