@@ -41,6 +41,7 @@ def test_types(tmp_path):
 
     assert type(parsed_info) is dict
     assert type(parsed_info["members"]) is list
+    assert len(parsed_info["members"]) == 0
 
 
 def test_translation_unit(tmp_path):
