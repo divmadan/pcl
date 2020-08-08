@@ -62,5 +62,5 @@ jobs:
       # Test with pytest
       - name: Test with pytest
         run: |
-          cd bindings/python
+          cd python
           pytest --verbose
