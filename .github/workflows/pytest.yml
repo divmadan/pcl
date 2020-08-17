@@ -72,7 +72,6 @@ jobs:
         run: |
           sudo apt-key update -y
           sudo apt-get update -y
-          sudo apt-get upgrade -y
       - name: Install libclang and its python bindings
         run: |
           sudo apt-get update
