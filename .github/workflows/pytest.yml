@@ -57,9 +57,11 @@ jobs:
       #       ${{ runner.os }}-pip-
       #       ${{ runner.os }}-
 
-      # Clean apt to prevent hash sum mismatch
+      # Clean to prevent hash sum mismatch
       - name: Clean apt
-        run: sudo apt-get clean
+        run: |
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
       # Install clang and it's python inteface via apt
       - name: Add llvm keys
         run: |
