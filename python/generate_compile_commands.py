@@ -85,19 +85,17 @@ def generate_compile_commmands(
     ]
 
     """
-    compile_commands = []
 
-    for contents in files_structure.values():
-        for files in contents.values():
-            for file in files:
-                item = {
-                    "directory": directory_name,
-                    "command": f"{compiler_path} {compiler_arguments} {file}",
-                    "file": file,
-                }
-                compile_commands.append(item)
-
-    return compile_commands
+    return [
+        dict(
+            directory=directory_name,
+            command=f"{compiler_path} {compiler_arguments} {file}",
+            file=file,
+        )
+        for contents in files_structure.values()
+        for files in contents.values()
+        for file in files
+    ]
 
 
 def main():
