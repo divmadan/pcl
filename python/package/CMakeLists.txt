@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(bindings)
+project(auto_bindings)
 
 # find_package(PCL REQUIRED)
 find_package(PCL COMPONENTS common REQUIRED)
