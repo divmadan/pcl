@@ -2,7 +2,7 @@ import os
 import json
 
 
-def get_filelist(root, whitelist):
+def get_filelist(root_folder, allowlist, blocklist):
     """
     1. Generates a file list dictionary of the structure:
 
@@ -20,8 +20,22 @@ def get_filelist(root, whitelist):
     """
     pcl = {}
 
-    for folder in whitelist:
-        folder_path = os.path.join(root, folder)
+    # list of all blocked files
+    blocklist_files = []
+    for folder in blocklist:
+        folder_path = os.path.join(root_folder, folder)
+        if os.path.exists(folder_path):
+            # walk the folder to get filenames
+            for root, _, files in os.walk(folder_path):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    # populate blocklist_files
+                    blocklist_files.append(file_path)
+        else:
+            raise Exception(f"{folder_path} doesn't exist")
+
+    for folder in allowlist:
+        folder_path = os.path.join(root_folder, folder)
         if os.path.exists(folder_path):
             impl_files = []
             header_files = []
@@ -29,15 +43,20 @@ def get_filelist(root, whitelist):
             # walk the folder to get filenames
             for root, _, files in os.walk(folder_path):
                 for file in files:
+                    file_path = os.path.join(root, file)
+
+                    if file_path in blocklist_files:
+                        continue
+
                     # filter for implementation files
                     if file.split(".")[-1] == "hpp":
-                        impl_files.append(os.path.join(root, file))
+                        impl_files.append(file_path)
                     # filter for header files
                     if file.split(".")[-1] == "h":
-                        header_files.append(os.path.join(root, file))
+                        header_files.append(file_path)
                     # filter for cpp files
                     if file.split(".")[-1] == "cpp":
-                        header_files.append(os.path.join(root, file))
+                        header_files.append(file_path)
                     # add a filter for any other file type if desired
                     _
 
@@ -84,8 +103,9 @@ def generate_compile_commmands(
 def main():
     pcl_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     # folders = os.listdir(root) # if file list needs to be generated for all folders
-    whitelist = ["common"]
-    pcl = get_filelist(pcl_root, whitelist)
+    allowlist = ["common"]
+    blocklist = []
+    pcl = get_filelist(pcl_root, allowlist, blocklist)
 
     # with open("pcl_files.json", "w") as f:
     #     json.dump(pcl, f, indent=2)
