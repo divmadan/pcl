@@ -7,7 +7,7 @@ def get_filelist(root_folder, allowlist, blocklist):
     1. Generates a file list dictionary of the structure:
 
     {
-        pcl_folder: {
+        root_folder: {
             sub_folder: {
                 "impls": [list_of_impl_files]
                 "headers": [list_of_header_files]
@@ -18,7 +18,7 @@ def get_filelist(root_folder, allowlist, blocklist):
     }
 
     """
-    pcl = {}
+    files_structure = {}
 
     # list of all blocked files
     blocklist_files = []
@@ -60,20 +60,20 @@ def get_filelist(root_folder, allowlist, blocklist):
                     # add a filter for any other file type if desired
                     _
 
-            # add list to pcl dict
-            pcl[folder] = {"impls": impl_files, "headers": header_files}
+            # add list to files_structure dict
+            files_structure[folder] = {"impls": impl_files, "headers": header_files}
 
         else:
             raise Exception(f"{folder_path} doesn't exist")
 
-    return pcl
+    return files_structure
 
 
 def generate_compile_commmands(
-    file_list, directory_name, compiler_path, compiler_arguments
+    files_structure, directory_name, compiler_path, compiler_arguments
 ):
     """
-    2. Generating compilation commands database from the dictionary:
+    2. Generating compilation commands database from the files structure:
 
     [
         {
@@ -87,7 +87,7 @@ def generate_compile_commmands(
     """
     compile_commands = []
 
-    for contents in file_list.values():
+    for contents in files_structure.values():
         for files in contents.values():
             for file in files:
                 item = {
@@ -101,20 +101,20 @@ def generate_compile_commmands(
 
 
 def main():
-    pcl_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    root_folder = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     # folders = os.listdir(root) # if file list needs to be generated for all folders
     allowlist = ["common"]
     blocklist = []
-    pcl = get_filelist(pcl_root, allowlist, blocklist)
+    files_structure = get_filelist(root_folder, allowlist, blocklist)
 
     # with open("pcl_files.json", "w") as f:
-    #     json.dump(pcl, f, indent=2)
+    #     json.dump(files_structure, f, indent=2)
 
     directory_name = os.path.dirname(os.path.abspath(__file__))
     compiler_path = "/usr/bin/clang++"
     compiler_arguments = "-std=c++14 -I/usr/include/pcl-1.8"
     compile_commmands = generate_compile_commmands(
-        pcl, directory_name, compiler_path, compiler_arguments
+        files_structure, directory_name, compiler_path, compiler_arguments
     )
 
     with open("compile_commands.json", "w") as f:
