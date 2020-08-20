@@ -35,6 +35,9 @@ def get_filelist(root, whitelist):
                     # filter for header files
                     if file.split(".")[-1] == "h":
                         header_files.append(os.path.join(root, file))
+                    # filter for cpp files
+                    if file.split(".")[-1] == "cpp":
+                        header_files.append(os.path.join(root, file))
                     # add a filter for any other file type if desired
                     _
 
@@ -89,7 +92,7 @@ def main():
 
     directory_name = os.path.dirname(os.path.abspath(__file__))
     compiler_path = "/usr/bin/clang++"
-    compiler_arguments = "-std=c++14"
+    compiler_arguments = "-std=c++14 -I/usr/include/pcl-1.8"
     compile_commmands = generate_compile_commmands(
         pcl, directory_name, compiler_path, compiler_arguments
     )
