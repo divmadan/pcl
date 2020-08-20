@@ -49,13 +49,13 @@ def get_filelist(root_folder, allowlist, blocklist):
                         continue
 
                     # filter for implementation files
-                    if file.split(".")[-1] == "hpp":
+                    if file.endswith(".hpp"):
                         impl_files.append(file_path)
                     # filter for header files
-                    if file.split(".")[-1] == "h":
+                    if file.endswith(".h"):
                         header_files.append(file_path)
                     # filter for cpp files
-                    if file.split(".")[-1] == "cpp":
+                    if file.endswith(".cpp"):
                         header_files.append(file_path)
                     # add a filter for any other file type if desired
                     _
