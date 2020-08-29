@@ -38,6 +38,7 @@ jobs:
 
       - name: Build pybind11 from source
         run: |
+          pip install pytest
           mkdir pybind11_source && cd pybind11_source
           git clone https://github.com/pybind/pybind11.git && cd pybind11
           mkdir build && cd build
