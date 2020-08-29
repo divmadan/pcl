@@ -36,11 +36,10 @@ jobs:
       - name: Install pcl
         run: sudo apt-get install -y libpcl-dev
 
-      - name: Pip install and build the source of Pybind11
+      - name: Build pybind11 from source
         run: |
-          python -m pip install pybind11
-          mkdir pybind11 && cd pybind11
-          git clone https://github.com/pybind/pybind11.git
+          mkdir pybind11_source && cd pybind11_source
+          git clone https://github.com/pybind/pybind11.git && cd pybind11
           mkdir build && cd build
           cmake ..
           sudo make check -j 4
