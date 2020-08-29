@@ -53,9 +53,9 @@ jobs:
       - name: Display PYTHONPATH
         run: python -c "import sys; print('\n'.join(sys.path))"
 
-      - name: Install Pybind11
-        # run: pip install pybind11
+      - name: Pip install and build the source of Pybind11
         run: |
+          pip install pybind11
           git clone https://github.com/pybind/pybind11.git
           mkdir build && cd build
           cmake ..
