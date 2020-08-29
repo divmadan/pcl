@@ -50,8 +50,8 @@ jobs:
       - name: Add llvm keys
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          echo 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-11 main' | sudo tee -a /etc/apt/sources.list
-          echo 'deb-src http://apt.llvm.org/bionic/ llvm-toolchain-bionic-11 main' | sudo tee -a /etc/apt/sources.list
+          echo 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main' | sudo tee -a /etc/apt/sources.list
+          echo 'deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main' | sudo tee -a /etc/apt/sources.list
       - name: Install libclang and its python bindings
         run: |
           sudo apt-get update
