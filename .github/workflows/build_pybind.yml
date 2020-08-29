@@ -73,16 +73,17 @@ jobs:
 
       # Parse
       - name: Parse point_types.hpp
-        run: python ${_PYTHON_BINDINGS_PATH}/scripts/parse.py ${GITHUB_WORKSPACE}/common/include/pcl/impl/point_types.hpp
+        run: |
+          cd ${_PYTHON_BINDINGS_PATH}
+          python scripts/parse.py ${GITHUB_WORKSPACE}/common/include/pcl/impl/point_types.hpp
         env:
           _PYTHON_BINDINGS_PATH: bindings/python
 
       # Generate pybind code
       - name: Generate pybind code for point_types.hpp
         run: |
-          ls -R ${GITHUB_WORKSPACE}/${_PYTHON_BINDINGS_PATH}
-          cat ${GITHUB_WORKSPACE}/${_PYTHON_BINDINGS_PATH}/json/pcl/common/include/pcl/impl/point_types.json
-          python ${_PYTHON_BINDINGS_PATH}/scripts/generate.py ${GITHUB_WORKSPACE}/${_PYTHON_BINDINGS_PATH}/json/pcl/common/include/pcl/impl/point_types.json
+          cd ${_PYTHON_BINDINGS_PATH}
+          python scripts/generate.py ${GITHUB_WORKSPACE}/${_PYTHON_BINDINGS_PATH}/json/common/include/pcl/impl/point_types.json
         env:
           _PYTHON_BINDINGS_PATH: bindings/python
 
@@ -90,19 +91,6 @@ jobs:
         # Hack to preserve the terminal output with color
         run: |
           cd ${_PYTHON_BINDINGS_PATH}
-          echo "python setup.py sdist bdist_wheel; exit" | script ${GITHUB_WORKSPACE}/output_${{ matrix.python-version }}
+          python setup.py sdist bdist_wheel
         env:
           _PYTHON_BINDINGS_PATH: bindings/python
-
-        # If we don't want the colored output, just use:
-        # run: python3 ${GITHUB_WORKSPACE}/setup.py sdist bdist_wheel
-      # Artifacts
-      - name: Upload terminal output
-        uses: actions/upload-artifact@v2
-        with:
-          # We are in ${GITHUB_WORKSPACE}
-          # ${GITHUB_SHA} won't work: use ${{ github.sha }}
-          name: build_pybind${{ matrix.python-version }}-${{ github.sha }}
-          path: output_${{ matrix.python-version }}
-        # Use always() to always run this step to publish test results when there are test failures
-        if: ${{ always() }}
