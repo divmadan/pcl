@@ -81,7 +81,9 @@ jobs:
 
       - name: Compile using CMake and setuptools
         # Hack to preserve the terminal output with color
-        run: echo "python ${_PYTHON_BINDINGS_PATH}/setup.py sdist bdist_wheel; exit" | script ${GITHUB_WORKSPACE}/output_${{ matrix.python-version }}
+        run: |
+          cd ${_PYTHON_BINDINGS_PATH}
+          echo "python ${_PYTHON_BINDINGS_PATH}/setup.py sdist bdist_wheel; exit" | script ${GITHUB_WORKSPACE}/output_${{ matrix.python-version }}
         env:
           _PYTHON_BINDINGS_PATH: bindings/python
 
