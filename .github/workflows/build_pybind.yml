@@ -36,6 +36,15 @@ jobs:
       - name: Install pcl
         run: sudo apt-get install -y libpcl-dev
 
+      - name: Pip install and build the source of Pybind11
+        run: |
+          python -m pip install pybind11
+          git clone https://github.com/pybind/pybind11.git
+          mkdir build && cd build
+          cmake ..
+          sudo make check -j 4
+          sudo make install
+
       # Install clang and it's python inteface via apt
       - name: Add llvm keys
         run: |
@@ -52,15 +61,6 @@ jobs:
         run: echo "::set-env name=PYTHONPATH::${PYTHON_PATH}:/usr/lib/python3/dist-packages"
       - name: Display PYTHONPATH
         run: python -c "import sys; print('\n'.join(sys.path))"
-
-      - name: Pip install and build the source of Pybind11
-        run: |
-          python -m pip install pybind11
-          git clone https://github.com/pybind/pybind11.git
-          mkdir build && cd build
-          cmake ..
-          sudo make check -j 4
-          sudo make install
 
       # TODO: A more general build CI, not just for point_types.hpp
 
