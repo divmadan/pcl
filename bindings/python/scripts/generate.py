@@ -385,7 +385,9 @@ def generate(module_name: str, parsed_info: dict = None, source: str = None) -> 
     if parsed_info:
         bind_object = bind(root=parsed_info, module_name=module_name)
         # Extract filename from parsed_info (TRANSLATION_UNIT's name contains the filepath)
-        filename = parsed_info["name"].split("/")[-1]
+        # filename = "pcl" + parsed_info["name"].rsplit("pcl")[-1]
+        # FIXME
+        filename = "pcl/point_types.h"
         return combine_lines()
     else:
         raise Exception("Empty dict: parsed_info")
