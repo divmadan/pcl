@@ -124,7 +124,8 @@ class bind:
         end_token["CLASS_TEMPLATE"] = ";"
         end_token["STRUCT_DECL"] = ";"
 
-        self._linelist.append(end_token.get(kind, ""))
+        if end_token.get(kind, None):
+            self._linelist.append(end_token.get(kind, None))
 
     @staticmethod
     def get_fields_from_anonymous(item: dict) -> list:
