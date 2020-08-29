@@ -37,6 +37,11 @@ def get_output_path(source, output_dir, split_from, extension):
     # split_path: contains the path after splitting. For split_path = pcl, contains the path as seen in the pcl directory
     _, split_path = source.split(f"{split_from}{os.sep}", 1)
 
+    # hack for CI; it contains multiple `pcl`s:
+    # `/home/runner/work/pcl/pcl/bindings/python` instead of `/home/runner/work/pcl/bindings/python`
+    if split_path.startswith("pcl"):
+        _, split_path = split_path.split(f"{split_from}{os.sep}", 1)
+
     # relative_dir: contains the relative output path for the json file
     # source_filename: contains the source's file name
     relative_dir, source_filename = os.path.split(split_path)
