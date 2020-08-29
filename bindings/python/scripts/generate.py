@@ -209,7 +209,7 @@ class bind:
             3. Handles field declarations.
             4. Handles class methods.
         """
-        
+
         # TODO: Extract functions, too much nesting
 
         class_name = self.name
