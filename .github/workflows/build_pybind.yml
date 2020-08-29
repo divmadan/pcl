@@ -33,15 +33,6 @@ jobs:
       - name: Install CMake
         run: sudo apt-get install -y cmake
 
-      - name: Install Pybind11
-        # run: pip install pybind11
-        run: |
-          git clone https://github.com/pybind/pybind11.git
-          mkdir build && cd build
-          cmake ..
-          sudo make check -j 4
-          sudo make install
-
       - name: Install pcl
         run: sudo apt-get install -y libpcl-dev
 
@@ -61,6 +52,15 @@ jobs:
         run: echo "::set-env name=PYTHONPATH::${PYTHON_PATH}:/usr/lib/python3/dist-packages"
       - name: Display PYTHONPATH
         run: python -c "import sys; print('\n'.join(sys.path))"
+
+      - name: Install Pybind11
+        # run: pip install pybind11
+        run: |
+          git clone https://github.com/pybind/pybind11.git
+          mkdir build && cd build
+          cmake ..
+          sudo make check -j 4
+          sudo make install
 
       # TODO: A more general build CI, not just for point_types.hpp
 
