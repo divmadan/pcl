@@ -60,8 +60,6 @@ jobs:
       - name: Install clang
         run: |
           sudo apt-get install -y clang
-          export CC=/usr/bin/clang
-          export CXX=/usr/bin/clang++
 
       # Add dist-package to path to enable apt installed python3-clang import
       - name: Add dist-packages to PYTHONPATH
@@ -89,7 +87,6 @@ jobs:
       - name: Generate pybind code for point_types.hpp
         run: |
           cd ${_PYTHON_BINDINGS_PATH}
-          echo ${CC}
           python scripts/generate.py ${GITHUB_WORKSPACE}/${_PYTHON_BINDINGS_PATH}/json/common/include/pcl/impl/point_types.json
           cat pybind11-gen/common/include/pcl/impl/point_types.cpp
         env:
@@ -101,3 +98,5 @@ jobs:
           python setup.py sdist bdist_wheel
         env:
           _PYTHON_BINDINGS_PATH: bindings/python
+          CC: /usr/bin/clang
+          CXX: /usr/bin/clang++
