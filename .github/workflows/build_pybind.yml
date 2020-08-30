@@ -57,6 +57,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libclang-11-dev python3-clang-11
 
+      - name: Install clang
+        run: |
+          sudo apt-get install -y clang
+          export CC=/usr/bin/clang
+          export CXX=/usr/bin/clang++
+
       # Add dist-package to path to enable apt installed python3-clang import
       - name: Add dist-packages to PYTHONPATH
         run: echo "::set-env name=PYTHONPATH::${PYTHON_PATH}:/usr/lib/python3/dist-packages"
@@ -83,13 +89,13 @@ jobs:
       - name: Generate pybind code for point_types.hpp
         run: |
           cd ${_PYTHON_BINDINGS_PATH}
+          echo ${CC}
           python scripts/generate.py ${GITHUB_WORKSPACE}/${_PYTHON_BINDINGS_PATH}/json/common/include/pcl/impl/point_types.json
           cat pybind11-gen/common/include/pcl/impl/point_types.cpp
         env:
           _PYTHON_BINDINGS_PATH: bindings/python
 
       - name: Compile using CMake and setuptools
-        # Hack to preserve the terminal output with color
         run: |
           cd ${_PYTHON_BINDINGS_PATH}
           python setup.py sdist bdist_wheel
