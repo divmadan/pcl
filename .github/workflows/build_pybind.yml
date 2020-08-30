@@ -84,6 +84,7 @@ jobs:
         run: |
           cd ${_PYTHON_BINDINGS_PATH}
           python scripts/generate.py ${GITHUB_WORKSPACE}/${_PYTHON_BINDINGS_PATH}/json/common/include/pcl/impl/point_types.json
+          cat pybind11-gen/common/include/pcl/impl/point_types.cpp
         env:
           _PYTHON_BINDINGS_PATH: bindings/python
 
