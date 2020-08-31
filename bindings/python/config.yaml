@@ -1,0 +1,30 @@
+# configuration file
+
+# How to use:
+
+setting_1:
+  mode: 3
+  filelist:
+    - /home/divyanshu/Projects/active/pcl/common/src/time_trigger.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/range_image_planar.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/poses_from_matches.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/common.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/io.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/projection_matrix.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/colors.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/parse.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/PCLPointCloud2.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/bearing_angle_image.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/correspondence.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/pcl_base.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/gaussian.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/distances.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/point_types.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/feature_histogram.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/print.cpp
+    - /home/divyanshu/Projects/active/pcl/common/src/range_image.cpp
+  compilation_commands:
+    - "-std=c++14"
+    - "-I/usr/include/pcl-1.8"
+  json_output_path: "/home/divyanshu/Projects/active/pcl/bindings/python/"
+  use_cache: True
