@@ -95,6 +95,7 @@ jobs:
       - name: Compile using CMake and setuptools
         run: |
           cd ${_PYTHON_BINDINGS_PATH}
+          python -m pip install setuptools
           python setup.py sdist bdist_wheel
         env:
           _PYTHON_BINDINGS_PATH: bindings/python
