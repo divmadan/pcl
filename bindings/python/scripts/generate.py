@@ -234,7 +234,8 @@ class bind:
         self._linelist.append(f'py::class_<{struct_details}>(m, "{class_name}")')
 
         # default constructor
-        self._linelist.append(".def(py::init<>())")
+        # do we need default for all?
+        # self._linelist.append(".def(py::init<>())")
 
         # TODO: Merge this and next block via a design updation
         # handle anonymous structs, etc. as field declarations
@@ -312,8 +313,9 @@ class bind:
         parameter_type_list = ",".join(parameter_type_list)
 
         # default ctor `.def(py::init<>())` already inserted while handling struct/class decl
-        if parameter_type_list:
-            self._linelist.append(f".def(py::init<{parameter_type_list}>())")
+        # if parameter_type_list:
+        #     self._linelist.append(f".def(py::init<{parameter_type_list}>())")
+        self._linelist.append(f".def(py::init<{parameter_type_list}>())")
 
     def handle_inclusion_directive(self) -> None:
         """
