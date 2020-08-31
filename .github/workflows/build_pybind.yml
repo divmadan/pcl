@@ -92,10 +92,18 @@ jobs:
         env:
           _PYTHON_BINDINGS_PATH: bindings/python
 
+      # Install pip again as CI complains about broken pip: don't know why?
+
+      # Install pip and packages
+      - name: Install pip
+        run: python -m pip install --upgrade pip
+
+      - name: Upgrade setuptools and wheel
+        run: python -m pip install --upgrade setuptools wheel
+
       - name: Compile using CMake and setuptools
         run: |
           cd ${_PYTHON_BINDINGS_PATH}
-          python -m pip install setuptools
           python setup.py sdist bdist_wheel
         env:
           _PYTHON_BINDINGS_PATH: bindings/python
