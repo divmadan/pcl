@@ -74,4 +74,3 @@ with open(path) as f:
     bind_object = bind(config)
     bind_object.check_config()
     bind_object.bind_code()
-
