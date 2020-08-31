@@ -230,7 +230,9 @@ def parse_file(source, compilation_database_path=None, compilation_commands=None
         compilation_commands = get_compilation_commands(
             compilation_database_path=compilation_database_path, filename=source,
         )
-    elif compilation_commands:  # If compilation_commands passed, just use that further on.
+    elif (
+        compilation_commands
+    ):  # If compilation_commands passed, just use that further on.
         pass
     else:  # Both args are None.
         raise Exception(
