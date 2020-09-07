@@ -8,7 +8,7 @@ import scripts.utils as utils
 import yaml
 import os
 
-path = utils.join_path(utils.get_parent_directory(file=__file__), "config.yaml")
+from argparse import ArgumentParser
 
 
 """
@@ -21,6 +21,12 @@ root_path:
   path (mode 1)
   None (rest)
 """
+
+
+def parse_arguments():
+    parser = ArgumentParser(description="Pybind11 bindings")
+    parser.add_argument("--config", help="Path to config (yaml)", required=True)
+    return parser.parse_args()
 
 
 class bind:
@@ -67,10 +73,15 @@ class bind:
             raise Exception(f"Invalid mode in configuration: {self.mode}")
 
 
-with open(path) as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)
-    # print(config)
+def main():
+    args = parse_arguments()
+    with open(args.config) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
 
-    bind_object = bind(config)
-    bind_object.check_config()
-    bind_object.bind_code()
+        bind_object = bind(config)
+        bind_object.check_config()
+        bind_object.bind_code()
+
+
+if __name__ == "__main__":
+    main()
