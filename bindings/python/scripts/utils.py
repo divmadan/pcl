@@ -2,6 +2,8 @@ import os
 import json
 import argparse
 
+from pathlib import Path
+
 
 def get_realpath(path):
     return os.path.realpath(path)
@@ -14,6 +16,10 @@ def ensure_dir_exists(dir):
 
 def get_parent_directory(file):
     return os.path.dirname(os.path.dirname(file))
+
+
+def get_level_ancestor(file, level):
+    return Path(file).resolve().parents[level]
 
 
 def join_path(*args):

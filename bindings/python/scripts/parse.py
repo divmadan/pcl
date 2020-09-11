@@ -208,7 +208,7 @@ def get_compilation_commands(compilation_database_path, filename):
     return list(compilation_commands[0].arguments)[1:-1]
 
 
-def parse_file(source, compilation_database_path=None):
+def parse_file(source, compilation_database_path=None, compilation_commands=None):
     """
     Returns the parsed_info for a file
 
@@ -223,10 +223,21 @@ def parse_file(source, compilation_database_path=None):
     # Create a new index to start parsing
     index = clang.Index.create()
 
-    # Get compiler arguments
-    compilation_commands = get_compilation_commands(
-        compilation_database_path=compilation_database_path, filename=source,
-    )
+    if compilation_database_path and compilation_commands:
+        print("Both parsed_info and source arguments provided, choosing parsed_info.")
+    elif compilation_database_path:  # If source passed, read JSON.
+        # Get compiler arguments
+        compilation_commands = get_compilation_commands(
+            compilation_database_path=compilation_database_path, filename=source,
+        )
+    elif (
+        compilation_commands
+    ):  # If compilation_commands passed, just use that further on.
+        pass
+    else:  # Both args are None.
+        raise Exception(
+            "Provide either compilation_database_path or compilation_commands"
+        )
 
     """
     - Parse the given source code file by running clang and generating the AST before loading
